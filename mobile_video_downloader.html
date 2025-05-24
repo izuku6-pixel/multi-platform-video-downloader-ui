@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IZU x N4 Video Downloader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #00ff00;
+            min-height: 100vh;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .hacker-banner {
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(0, 255, 0, 0.05);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 10px rgba(0, 255, 0, 0.3); }
+            to { box-shadow: 0 0 20px rgba(0, 255, 0, 0.6); }
+        }
+
+        .banner-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .banner-subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .platform-btn {
+            background: rgba(0, 255, 0, 0.1);
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            padding: 15px 10px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .platform-btn:hover, .platform-btn:focus {
+            background: rgba(0, 255, 0, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .platform-btn.active {
+            background: rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.7);
+        }
+
+        .download-section {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .download-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            color: #00ff00;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .input-field:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .quality-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .quality-btn {
+            background: rgba(0, 255, 0, 0.1);
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quality-btn:hover, .quality-btn.selected {
+            background: rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .download-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #00ff00, #00cc00);
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 0, 0.4);
+        }
+
+        .download-btn:disabled {
+            background: rgba(0, 255, 0, 0.3);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .status-success {
+            background: rgba(0, 255, 0, 0.2);
+            border: 2px solid #00ff00;
+        }
+
+        .status-error {
+            background: rgba(255, 0, 0, 0.2);
+            border: 2px solid #ff0000;
+            color: #ff6666;
+        }
+
+        .status-info {
+            background: rgba(0, 100, 255, 0.2);
+            border: 2px solid #0066ff;
+            color: #66aaff;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 0, 0.1);
+            border: 2px solid #ffff00;
+            color: #ffff00;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: inherit;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 255, 0, 0.3);
+            border-top: 3px solid #00ff00;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .thank-you-banner {
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            background: rgba(0, 255, 0, 0.1);
+            animation: pulse 2s ease-in-out infinite;
+            display: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @media (max-width: 480px) {
+            .platform-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quality-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .banner-title {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hacker-banner">
+            <div class="banner-title">IZU x N4</div>
+            <div class="banner-subtitle">Video Downloader</div>
+            <div class="banner-subtitle">Breaking the rules, nothing else!</div>
+        </div>
+
+        <div id="platformSelection">
+            <div class="platform-grid">
+                <button class="platform-btn" onclick="selectPlatform('youtube')">
+                    📺<br>YOUTUBE
+                </button>
+                <button class="platform-btn" onclick="selectPlatform('youtube-playlist')">
+                    📋<br>YT PLAYLIST
+                </button>
+                <button class="platform-btn" onclick="selectPlatform('instagram')">
+                    📸<br>INSTAGRAM
+                </button>
+                <button class="platform-btn" onclick="selectPlatform('tiktok')">
+                    🎵<br>TIKTOK
+                </button>
+                <button class="platform-btn" onclick="selectPlatform('twitter')">
+                    🐦<br>TWITTER/X
+                </button>
+                <button class="platform-btn" onclick="selectPlatform('facebook')">
+                    👥<br>FACEBOOK
+                </button>
+                <button class="platform-btn" onclick="selectPlatform('reddit')">
+                    🤖<br>REDDIT
+                </button>
+                <button class="platform-btn" onclick="selectPlatform('pinterest')">
+                    📌<br>PINTEREST
+                </button>
+            </div>
+        </div>
+
+        <div class="status-message" id="statusMessage"></div>
+
+        <!-- YouTube Download Section -->
+        <div id="youtube-section" class="download-section">
+            <button class="back-btn" onclick="goBack()">← Back to Platforms</button>
+            <div class="input-group">
+                <label class="input-label">Enter YouTube Video URL:</label>
+                <input type="url" class="input-field" id="youtube-url" placeholder="https://youtube.com/watch?v=...">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Select Quality:</label>
+                <div class="quality-grid">
+                    <button class="quality-btn" onclick="selectQuality('youtube', '4k')" data-quality="4k">4K</button>
+                    <button class="quality-btn" onclick="selectQuality('youtube', '1440p')" data-quality="1440p">1440P</button>
+                    <button class="quality-btn" onclick="selectQuality('youtube', '1080p')" data-quality="1080p">1080P</button>
+                    <button class="quality-btn" onclick="selectQuality('youtube', 'best')" data-quality="best">BEST</button>
+                    <button class="quality-btn" onclick="selectQuality('youtube', 'audio')" data-quality="audio">AUDIO</button>
+                </div>
+            </div>
+            <button class="download-btn" onclick="downloadVideo('youtube')" id="youtube-download-btn">
+                🚀 DOWNLOAD VIDEO
+            </button>
+        </div>
+
+        <!-- YouTube Playlist Download Section -->
+        <div id="youtube-playlist-section" class="download-section">
+            <button class="back-btn" onclick="goBack()">← Back to Platforms</button>
+            <div class="input-group">
+                <label class="input-label">Enter YouTube Playlist URL:</label>
+                <input type="url" class="input-field" id="youtube-playlist-url" placeholder="https://youtube.com/playlist?list=...">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Select Quality:</label>
+                <div class="quality-grid">
+                    <button class="quality-btn" onclick="selectQuality('youtube-playlist', '4k')" data-quality="4k">4K</button>
+                    <button class="quality-btn" onclick="selectQuality('youtube-playlist', '1440p')" data-quality="1440p">1440P</button>
+                    <button class="quality-btn" onclick="selectQuality('youtube-playlist', '1080p')" data-quality="1080p">1080P</button>
+                    <button class="quality-btn" onclick="selectQuality('youtube-playlist', 'best')" data-quality="best">BEST</button>
+                    <button class="quality-btn" onclick="selectQuality('youtube-playlist', 'audio')" data-quality="audio">AUDIO</button>
+                </div>
+            </div>
+            <button class="download-btn" onclick="downloadVideo('youtube-playlist')" id="youtube-playlist-download-btn">
+                🚀 DOWNLOAD PLAYLIST
+            </button>
+        </div>
+
+        <!-- Instagram Download Section -->
+        <div id="instagram-section" class="download-section">
+            <button class="back-btn" onclick="goBack()">← Back to Platforms</button>
+            <div class="input-group">
+                <label class="input-label">Enter Instagram Video URL:</label>
+                <input type="url" class="input-field" id="instagram-url" placeholder="https://instagram.com/p/...">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Username (optional):</label>
+                <input type="text" class="input-field" id="instagram-username" placeholder="Your Instagram username">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Password (optional):</label>
+                <input type="password" class="input-field" id="instagram-password" placeholder="Your Instagram password">
+            </div>
+            <button class="download-btn" onclick="downloadVideo('instagram')" id="instagram-download-btn">
+                🚀 DOWNLOAD VIDEO
+            </button>
+        </div>
+
+        <!-- Generic Platform Sections -->
+        <div id="tiktok-section" class="download-section">
+            <button class="back-btn" onclick="goBack()">← Back to Platforms</button>
+            <div class="input-group">
+                <label class="input-label">Enter TikTok Video URL:</label>
+                <input type="url" class="input-field" id="tiktok-url" placeholder="https://tiktok.com/@user/video/...">
+            </div>
+            <button class="download-btn" onclick="downloadVideo('tiktok')" id="tiktok-download-btn">
+                🚀 DOWNLOAD VIDEO
+            </button>
+        </div>
+
+        <div id="twitter-section" class="download-section">
+            <button class="back-btn" onclick="goBack()">← Back to Platforms</button>
+            <div class="input-group">
+                <label class="input-label">Enter Twitter/X Video URL:</label>
+                <input type="url" class="input-field" id="twitter-url" placeholder="https://x.com/user/status/...">
+            </div>
+            <button class="download-btn" onclick="downloadVideo('twitter')" id="twitter-download-btn">
+                🚀 DOWNLOAD VIDEO
+            </button>
+        </div>
+
+        <div id="facebook-section" class="download-section">
+            <button class="back-btn" onclick="goBack()">← Back to Platforms</button>
+            <div class="input-group">
+                <label class="input-label">Enter Facebook Video URL:</label>
+                <input type="url" class="input-field" id="facebook-url" placeholder="https://facebook.com/...">
+            </div>
+            <button class="download-btn" onclick="downloadVideo('facebook')" id="facebook-download-btn">
+                🚀 DOWNLOAD VIDEO
+            </button>
+        </div>
+
+        <div id="reddit-section" class="download-section">
+            <button class="back-btn" onclick="goBack()">← Back to Platforms</button>
+            <div class="input-group">
+                <label class="input-label">Enter Reddit Video URL:</label>
+                <input type="url" class="input-field" id="reddit-url" placeholder="https://reddit.com/r/.../comments/...">
+            </div>
+            <button class="download-btn" onclick="downloadVideo('reddit')" id="reddit-download-btn">
+                🚀 DOWNLOAD VIDEO
+            </button>
+        </div>
+
+        <div id="pinterest-section" class="download-section">
+            <button class="back-btn" onclick="goBack()">← Back to Platforms</button>
+            <div class="input-group">
+                <label class="input-label">Enter Pinterest Video URL:</label>
+                <input type="url" class="input-field" id="pinterest-url" placeholder="https://pinterest.com/pin/...">
+            </div>
+            <button class="download-btn" onclick="downloadVideo('pinterest')" id="pinterest-download-btn">
+                🚀 DOWNLOAD VIDEO
+            </button>
+        </div>
+
+        <div class="thank-you-banner" id="thankYouBanner">
+            <div style="font-size: 20px; margin-bottom: 10px;">✅ THANK YOU</div>
+            <div style="font-size: 14px;">Dev by IZU x N4</div>
+            <div style="font-size: 12px; margin-top: 5px;">Download initiated successfully!</div>
+        </div>
+    </div>
+
+    <script>
+        let currentPlatform = null;
+        let selectedQualities = {};
+
+        function selectPlatform(platform) {
+            // Hide all sections
+            document.querySelectorAll('.download-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Hide platform selection
+            document.getElementById('platformSelection').style.display = 'none';
+            
+            // Show selected platform section
+            document.getElementById(platform + '-section').classList.add('active');
+            
+            currentPlatform = platform;
+        }
+
+        function goBack() {
+            // Hide all sections
+            document.querySelectorAll('.download-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show platform selection
+            document.getElementById('platformSelection').style.display = 'block';
+            
+            // Hide status and thank you messages
+            hideStatusMessage();
+            document.getElementById('thankYouBanner').style.display = 'none';
+            
+            currentPlatform = null;
+        }
+
+        function selectQuality(platform, quality) {
+            // Remove previous selection
+            document.querySelectorAll(`#${platform}-section .quality-btn`).forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // Add selection to clicked button
+            event.target.classList.add('selected');
+            
+            selectedQualities[platform] = quality;
+        }
+
+        function validateURL(url, platform) {
+            const patterns = {
+                youtube: /^(https?:\/\/)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)\/(watch\?v=|embed\/|v\/|shorts\/|.+\?v=)?([^&=%\?]{11})/,
+                'youtube-playlist': /^(https?:\/\/)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)\/(playlist\?list=|watch\?v=.*&list=)([a-zA-Z0-9_-]+)/,
+                instagram: /^(https?:\/\/)?(www\.)?instagram\.com\/(p|reel)\/([^\/]+)\//,
+                tiktok: /^(https?:\/\/)?(www\.)?(tiktok\.com|vm\.tiktok\.com)\/(@[^\/]+\/video\/\d+|t\/\w+)/,
+                twitter: /^(https?:\/\/)?(www\.)?(x\.com|twitter\.com)\/[^\/]+\/status\/\d+/,
+                facebook: /^(https?:\/\/)?(www\.)?(facebook\.com|fb\.watch)\/.+/,
+                reddit: /^(https?:\/\/)?(www\.)?reddit\.com\/r\/[^\/]+\/comments\/[^\/]+/,
+                pinterest: /^(https?:\/\/)?(www\.)?pinterest\.com\/pin\/\d+/
+            };
+
+            return patterns[platform] ? patterns[platform].test(url) : false;
+        }
+
+        function showStatusMessage(message, type = 'info') {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.className = `status-message status-${type}`;
+            statusEl.style.display = 'block';
+            
+            // Auto-hide after 5 seconds for success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    hideStatusMessage();
+                }, 5000);
+            }
+        }
+
+        function hideStatusMessage() {
+            document.getElementById('statusMessage').style.display = 'none';
+        }
+
+        function setLoadingState(platform, loading) {
+            const btn = document.getElementById(`${platform}-download-btn`);
+            if (loading) {
+                btn.innerHTML = '<span class="loading"></span>Processing...';
+                btn.disabled = true;
+            } else {
+                btn.innerHTML = '🚀 DOWNLOAD VIDEO';
+                btn.disabled = false;
+            }
+        }
+
+        function downloadVideo(platform) {
+            hideStatusMessage();
+            
+            const url = document.getElementById(`${platform}-url`).value.trim();
+            
+            if (!url) {
+                showStatusMessage('Please enter a valid URL!', 'error');
+                return;
+            }
+
+            if (!validateURL(url, platform)) {
+                showStatusMessage(`Invalid ${platform.toUpperCase()} URL format!`, 'error');
+                return;
+            }
+
+            // For YouTube platforms, check if quality is selected
+            if ((platform === 'youtube' || platform === 'youtube-playlist') && !selectedQualities[platform]) {
+                showStatusMessage('Please select a quality option!', 'error');
+                return;
+            }
+
+            setLoadingState(platform, true);
+
+            // Simulate download process
+            setTimeout(() => {
+                setLoadingState(platform, false);
+                
+                // Show success message
+                showStatusMessage(`${platform.toUpperCase()} video download initiated successfully!`, 'success');
+                
+                // Show thank you banner
+                document.getElementById('thankYouBanner').style.display = 'block';
+                
+                // In a real implementation, this would trigger the actual download
+                simulateDownload(url, platform);
+                
+            }, 2000);
+        }
+
+        function simulateDownload(url, platform) {
+            // This is where you would integrate with a backend service
+            // that actually handles the video downloading using yt-dlp or similar tools
+            
+            console.log(`Downloading ${platform} video from: ${url}`);
+            if (selectedQualities[platform]) {
+                console.log(`Quality: ${selectedQualities[platform]}`);
+            }
+            
+            // Create a dummy download link (in real implementation, this would be the actual video file)
+            const link = document.createElement('a');
+            link.href = '#';
+            link.download = `${platform}_video_${Date.now()}.mp4`;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            
+            // Show info about the simulated download
+            setTimeout(() => {
+                showStatusMessage('Note: This is a demo version. In the full version, your video would be downloaded to your device.', 'info');
+            }, 3000);
+        }
+
+        // Add some visual enhancements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click effect to all buttons
+            document.querySelectorAll('button').forEach(button => {
+                button.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
